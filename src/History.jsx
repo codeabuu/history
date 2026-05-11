@@ -4,17 +4,14 @@ import { useState, useEffect, useCallback } from 'react'
 const sevenDaysModules = import.meta.glob('./assets/7days/*.{jpeg,jpg,png,webp}', { eager: true })
 const monthModules = import.meta.glob('./assets/this-month/*.{jpeg,jpg,png,webp}', { eager: true })
 
-// Extract URLs correctly - handle both module objects and direct URLs
+// Extract URLs correctly
 const sevenDaysImages = Object.entries(sevenDaysModules).map(([path, mod]) => {
-  // Vite returns either the URL directly or in .default
   const url = typeof mod === 'string' ? mod : mod.default
-  console.log('7days path:', path, '→ url:', url)
   return url
 }).filter(Boolean)
 
 const monthImages = Object.entries(monthModules).map(([path, mod]) => {
   const url = typeof mod === 'string' ? mod : mod.default
-  console.log('month path:', path, '→ url:', url)
   return url
 }).filter(Boolean)
 
@@ -25,10 +22,7 @@ export default function History() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [currentArray, setCurrentArray] = useState([])
   const [touchStart, setTouchStart] = useState(null)
-
-  // Log for debugging
-  console.log('Final 7days:', sevenDaysImages)
-  console.log('Final month:', monthImages)
+  const [activeSection, setActiveSection] = useState('7days')
 
   const openLightbox = useCallback((src, array, index) => {
     setCurrentArray(array)
@@ -97,6 +91,10 @@ export default function History() {
     setTouchStart(null)
   }
 
+  const currentImages = activeSection === '7days' ? sevenDaysImages : monthImages
+  const showAll = activeSection === '7days' ? showAll7Days : showAllMonth
+  const setShowAll = activeSection === '7days' ? setShowAll7Days : setShowAllMonth
+
   return (
     <div className="history-container">
       
@@ -132,152 +130,98 @@ export default function History() {
         </div>
       )}
 
-      {/* Past 7 Days */}
-      <div className="sticky-section">
-        <div className="sticky-header">
-          <span>🔥 Past 7 Days ({sevenDaysImages.length})</span>
-        </div>
-
-        <div className="section-content">
-          {sevenDaysImages.length === 0 ? (
-            <p style={{color: '#666', textAlign: 'center', padding: '20px'}}>
-              No images found. Check console for debug info.
-            </p>
-          ) : (
-            <>
-              <div className="horizontal-scroll">
-                {sevenDaysImages.slice(0, 3).map((src, index) => (
-                  <div 
-                    key={index} 
-                    className="image-card-small" 
-                    onClick={() => openLightbox(src, sevenDaysImages, index)}
-                  >
-                    <img
-                      src={src}
-                      alt={`Prediction ${index + 1}`}
-                      className="img-small"
-                      loading="lazy"
-                      onError={(e) => {
-                        console.error('Failed to load 7days image:', src)
-                        e.target.style.display = 'none'
-                        e.target.parentElement.classList.add('no-image')
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
-
-              {sevenDaysImages.length > 3 && (
-                <button
-                  className="see-more-btn"
-                  onClick={() => setShowAll7Days(!showAll7Days)}
-                >
-                  {showAll7Days ? 'Show Less' : 'See More'} ({sevenDaysImages.length - 3} more)
-                  <span className={`arrow ${showAll7Days ? 'up' : ''}`}>▼</span>
-                </button>
-              )}
-
-              {showAll7Days && (
-                <div className="vertical-list">
-                  {sevenDaysImages.slice(3).map((src, index) => (
-                    <div 
-                      key={index + 3} 
-                      className="image-card-large" 
-                      onClick={() => openLightbox(src, sevenDaysImages, index + 3)}
-                    >
-                      <img
-                        src={src}
-                        alt={`Prediction ${index + 4}`}
-                        className="img-large"
-                        loading="lazy"
-                        onError={(e) => {
-                          console.error('Failed to load 7days image:', src)
-                          e.target.style.display = 'none'
-                          e.target.parentElement.classList.add('no-image-large')
-                        }}
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-        </div>
+      {/* Tab Switcher */}
+      <div className="tab-container">
+        <button 
+          className={`tab-btn ${activeSection === '7days' ? 'active' : ''}`}
+          onClick={() => setActiveSection('7days')}
+        >
+          <span className="tab-icon">🔥</span>
+          <span className="tab-text">Past 7 Days</span>
+          <span className="tab-count">{sevenDaysImages.length}</span>
+        </button>
+        <button 
+          className={`tab-btn ${activeSection === 'month' ? 'active' : ''}`}
+          onClick={() => setActiveSection('month')}
+        >
+          <span className="tab-icon">⌛</span>
+          <span className="tab-text"> This Month</span>
+          <span className="tab-count">{monthImages.length}</span>
+        </button>
       </div>
 
-      <div className="divider" />
+      {/* Content */}
+      <div className="content-area">
+        {currentImages.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon">📭</div>
+            <p>No images yet</p>
+          </div>
+        ) : (
+          <>
+            {/* Featured Image (first/latest) */}
+            <div 
+              className="featured-card" 
+              onClick={() => openLightbox(currentImages[0], currentImages, 0)}
+            >
+              <img
+                src={currentImages[0]}
+                alt="Latest"
+                className="featured-img"
+                loading="eager"
+                onError={(e) => {
+                  e.target.style.display = 'none'
+                  e.target.parentElement.classList.add('no-image-featured')
+                }}
+              />
+              <div className="featured-badge">LATEST</div>
+            </div>
 
-      {/* This Month */}
-      <div className="sticky-section">
-        <div className="sticky-header">
-          <span>💸 This Month ({monthImages.length})</span>
-        </div>
-
-        <div className="section-content">
-          {monthImages.length === 0 ? (
-            <p style={{color: '#666', textAlign: 'center', padding: '20px'}}>
-              No images found. Check console for debug info.
-            </p>
-          ) : (
-            <>
-              <div className="horizontal-scroll">
-                {monthImages.slice(0, 3).map((src, index) => (
+            {/* Grid for remaining images */}
+            {currentImages.length > 1 && (
+              <div className="image-grid">
+                {currentImages.slice(1, showAll ? currentImages.length : 4).map((src, index) => (
                   <div 
-                    key={index} 
-                    className="image-card-small" 
-                    onClick={() => openLightbox(src, monthImages, index)}
+                    key={index + 1} 
+                    className="grid-item" 
+                    onClick={() => openLightbox(src, currentImages, index + 1)}
                   >
                     <img
                       src={src}
-                      alt={`Result ${index + 1}`}
-                      className="img-small"
+                      alt={`Result ${index + 2}`}
+                      className="grid-img"
                       loading="lazy"
                       onError={(e) => {
-                        console.error('Failed to load month image:', src)
                         e.target.style.display = 'none'
-                        e.target.parentElement.classList.add('no-image')
+                        e.target.parentElement.classList.add('no-image-grid')
                       }}
                     />
                   </div>
                 ))}
               </div>
+            )}
 
-              {monthImages.length > 3 && (
-                <button
-                  className="see-more-btn"
-                  onClick={() => setShowAllMonth(!showAllMonth)}
-                >
-                  {showAllMonth ? 'Show Less' : 'See More'} ({monthImages.length - 3} more)
-                  <span className={`arrow ${showAllMonth ? 'up' : ''}`}>▼</span>
-                </button>
-              )}
-
-              {showAllMonth && (
-                <div className="vertical-list">
-                  {monthImages.slice(3).map((src, index) => (
-                    <div 
-                      key={index + 3} 
-                      className="image-card-large" 
-                      onClick={() => openLightbox(src, monthImages, index + 3)}
-                    >
-                      <img
-                        src={src}
-                        alt={`Result ${index + 4}`}
-                        className="img-large"
-                        loading="lazy"
-                        onError={(e) => {
-                          console.error('Failed to load month image:', src)
-                          e.target.style.display = 'none'
-                          e.target.parentElement.classList.add('no-image-large')
-                        }}
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-        </div>
+            {/* See More */}
+            {currentImages.length > 4 && (
+              <button
+                className="see-more-btn"
+                onClick={() => setShowAll(!showAll)}
+              >
+                {showAll ? (
+                  <>
+                    <span>Show Less</span>
+                    <span className="arrow up">▲</span>
+                  </>
+                ) : (
+                  <>
+                    <span>View All ({currentImages.length - 4} more)</span>
+                    <span className="arrow">▼</span>
+                  </>
+                )}
+              </button>
+            )}
+          </>
+        )}
       </div>
     </div>
   )
