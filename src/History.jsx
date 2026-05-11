@@ -210,7 +210,7 @@ export default function History() {
       {/* This Month */}
       <div className="sticky-section">
         <div className="sticky-header">
-          <span>📅 This Month ({monthImages.length})</span>
+          <span>💸 This Month ({monthImages.length})</span>
         </div>
 
         <div className="section-content">
