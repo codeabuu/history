@@ -137,7 +137,7 @@ export default function History() {
           onClick={() => setActiveSection('7days')}
         >
           <span className="tab-icon">🔥</span>
-          <span className="tab-text">Past 7 Days</span>
+          <span className="tab-text">This Week</span>
           <span className="tab-count">{sevenDaysImages.length}</span>
         </button>
         <button 
