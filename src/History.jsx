@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
 
-// Auto-import all images from src/assets/ (NOT public/)
+// Auto-import all images from src/assets/ at BUILD TIME
 const sevenDaysModules = import.meta.glob('./assets/7days/*.{jpeg,jpg,png,webp}', { eager: true, as: 'url' })
 const monthModules = import.meta.glob('./assets/this-month/*.{jpeg,jpg,png,webp}', { eager: true, as: 'url' })
 
-// Extract URLs - Vite handles the paths automatically
+// Extract URLs - Vite handles paths automatically
 const sevenDaysImages = Object.values(sevenDaysModules)
 const monthImages = Object.values(monthModules)
 
@@ -125,56 +125,62 @@ export default function History() {
         </div>
 
         <div className="section-content">
-          <div className="horizontal-scroll">
-            {sevenDaysImages.slice(0, 3).map((src, index) => (
-              <div 
-                key={index} 
-                className="image-card-small" 
-                onClick={() => openLightbox(src, sevenDaysImages, index)}
-              >
-                <img
-                  src={src}
-                  alt={`Prediction ${index + 1}`}
-                  className="img-small"
-                  onError={(e) => {
-                    e.target.style.display = 'none'
-                    e.target.parentElement.classList.add('no-image')
-                  }}
-                />
+          {sevenDaysImages.length === 0 ? (
+            <p style={{color: '#666', textAlign: 'center', padding: '20px'}}>No images yet</p>
+          ) : (
+            <>
+              <div className="horizontal-scroll">
+                {sevenDaysImages.slice(0, 3).map((src, index) => (
+                  <div 
+                    key={index} 
+                    className="image-card-small" 
+                    onClick={() => openLightbox(src, sevenDaysImages, index)}
+                  >
+                    <img
+                      src={src}
+                      alt={`Prediction ${index + 1}`}
+                      className="img-small"
+                      onError={(e) => {
+                        e.target.style.display = 'none'
+                        e.target.parentElement.classList.add('no-image')
+                      }}
+                    />
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          {sevenDaysImages.length > 3 && (
-            <button
-              className="see-more-btn"
-              onClick={() => setShowAll7Days(!showAll7Days)}
-            >
-              {showAll7Days ? 'Show Less' : 'See More'} ({sevenDaysImages.length - 3} more)
-              <span className={`arrow ${showAll7Days ? 'up' : ''}`}>▼</span>
-            </button>
-          )}
-
-          {showAll7Days && (
-            <div className="vertical-list">
-              {sevenDaysImages.slice(3).map((src, index) => (
-                <div 
-                  key={index + 3} 
-                  className="image-card-large" 
-                  onClick={() => openLightbox(src, sevenDaysImages, index + 3)}
+              {sevenDaysImages.length > 3 && (
+                <button
+                  className="see-more-btn"
+                  onClick={() => setShowAll7Days(!showAll7Days)}
                 >
-                  <img
-                    src={src}
-                    alt={`Prediction ${index + 4}`}
-                    className="img-large"
-                    onError={(e) => {
-                      e.target.style.display = 'none'
-                      e.target.parentElement.classList.add('no-image-large')
-                    }}
-                  />
+                  {showAll7Days ? 'Show Less' : 'See More'} ({sevenDaysImages.length - 3} more)
+                  <span className={`arrow ${showAll7Days ? 'up' : ''}`}>▼</span>
+                </button>
+              )}
+
+              {showAll7Days && (
+                <div className="vertical-list">
+                  {sevenDaysImages.slice(3).map((src, index) => (
+                    <div 
+                      key={index + 3} 
+                      className="image-card-large" 
+                      onClick={() => openLightbox(src, sevenDaysImages, index + 3)}
+                    >
+                      <img
+                        src={src}
+                        alt={`Prediction ${index + 4}`}
+                        className="img-large"
+                        onError={(e) => {
+                          e.target.style.display = 'none'
+                          e.target.parentElement.classList.add('no-image-large')
+                        }}
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -188,56 +194,62 @@ export default function History() {
         </div>
 
         <div className="section-content">
-          <div className="horizontal-scroll">
-            {monthImages.slice(0, 3).map((src, index) => (
-              <div 
-                key={index} 
-                className="image-card-small" 
-                onClick={() => openLightbox(src, monthImages, index)}
-              >
-                <img
-                  src={src}
-                  alt={`Result ${index + 1}`}
-                  className="img-small"
-                  onError={(e) => {
-                    e.target.style.display = 'none'
-                    e.target.parentElement.classList.add('no-image')
-                  }}
-                />
+          {monthImages.length === 0 ? (
+            <p style={{color: '#666', textAlign: 'center', padding: '20px'}}>No images yet</p>
+          ) : (
+            <>
+              <div className="horizontal-scroll">
+                {monthImages.slice(0, 3).map((src, index) => (
+                  <div 
+                    key={index} 
+                    className="image-card-small" 
+                    onClick={() => openLightbox(src, monthImages, index)}
+                  >
+                    <img
+                      src={src}
+                      alt={`Result ${index + 1}`}
+                      className="img-small"
+                      onError={(e) => {
+                        e.target.style.display = 'none'
+                        e.target.parentElement.classList.add('no-image')
+                      }}
+                    />
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          {monthImages.length > 3 && (
-            <button
-              className="see-more-btn"
-              onClick={() => setShowAllMonth(!showAllMonth)}
-            >
-              {showAllMonth ? 'Show Less' : 'See More'} ({monthImages.length - 3} more)
-              <span className={`arrow ${showAllMonth ? 'up' : ''}`}>▼</span>
-            </button>
-          )}
-
-          {showAllMonth && (
-            <div className="vertical-list">
-              {monthImages.slice(3).map((src, index) => (
-                <div 
-                  key={index + 3} 
-                  className="image-card-large" 
-                  onClick={() => openLightbox(src, monthImages, index + 3)}
+              {monthImages.length > 3 && (
+                <button
+                  className="see-more-btn"
+                  onClick={() => setShowAllMonth(!showAllMonth)}
                 >
-                  <img
-                    src={src}
-                    alt={`Result ${index + 4}`}
-                    className="img-large"
-                    onError={(e) => {
-                      e.target.style.display = 'none'
-                      e.target.parentElement.classList.add('no-image-large')
-                    }}
-                  />
+                  {showAllMonth ? 'Show Less' : 'See More'} ({monthImages.length - 3} more)
+                  <span className={`arrow ${showAllMonth ? 'up' : ''}`}>▼</span>
+                </button>
+              )}
+
+              {showAllMonth && (
+                <div className="vertical-list">
+                  {monthImages.slice(3).map((src, index) => (
+                    <div 
+                      key={index + 3} 
+                      className="image-card-large" 
+                      onClick={() => openLightbox(src, monthImages, index + 3)}
+                    >
+                      <img
+                        src={src}
+                        alt={`Result ${index + 4}`}
+                        className="img-large"
+                        onError={(e) => {
+                          e.target.style.display = 'none'
+                          e.target.parentElement.classList.add('no-image-large')
+                        }}
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </div>
       </div>
