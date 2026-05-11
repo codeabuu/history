@@ -1,12 +1,22 @@
 import { useState, useEffect, useCallback } from 'react'
 
-// Auto-import all images from src/assets/ at BUILD TIME
-const sevenDaysModules = import.meta.glob('./assets/7days/*.{jpeg,jpg,png,webp}', { eager: true, as: 'url' })
-const monthModules = import.meta.glob('./assets/this-month/*.{jpeg,jpg,png,webp}', { eager: true, as: 'url' })
+// Auto-import all images from src/assets/
+const sevenDaysModules = import.meta.glob('./assets/7days/*.{jpeg,jpg,png,webp}', { eager: true })
+const monthModules = import.meta.glob('./assets/this-month/*.{jpeg,jpg,png,webp}', { eager: true })
 
-// Extract URLs - Vite handles paths automatically
-const sevenDaysImages = Object.values(sevenDaysModules)
-const monthImages = Object.values(monthModules)
+// Extract URLs correctly - handle both module objects and direct URLs
+const sevenDaysImages = Object.entries(sevenDaysModules).map(([path, mod]) => {
+  // Vite returns either the URL directly or in .default
+  const url = typeof mod === 'string' ? mod : mod.default
+  console.log('7days path:', path, '→ url:', url)
+  return url
+}).filter(Boolean)
+
+const monthImages = Object.entries(monthModules).map(([path, mod]) => {
+  const url = typeof mod === 'string' ? mod : mod.default
+  console.log('month path:', path, '→ url:', url)
+  return url
+}).filter(Boolean)
 
 export default function History() {
   const [showAll7Days, setShowAll7Days] = useState(false)
@@ -15,6 +25,10 @@ export default function History() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [currentArray, setCurrentArray] = useState([])
   const [touchStart, setTouchStart] = useState(null)
+
+  // Log for debugging
+  console.log('Final 7days:', sevenDaysImages)
+  console.log('Final month:', monthImages)
 
   const openLightbox = useCallback((src, array, index) => {
     setCurrentArray(array)
@@ -126,7 +140,9 @@ export default function History() {
 
         <div className="section-content">
           {sevenDaysImages.length === 0 ? (
-            <p style={{color: '#666', textAlign: 'center', padding: '20px'}}>No images yet</p>
+            <p style={{color: '#666', textAlign: 'center', padding: '20px'}}>
+              No images found. Check console for debug info.
+            </p>
           ) : (
             <>
               <div className="horizontal-scroll">
@@ -140,7 +156,9 @@ export default function History() {
                       src={src}
                       alt={`Prediction ${index + 1}`}
                       className="img-small"
+                      loading="lazy"
                       onError={(e) => {
+                        console.error('Failed to load 7days image:', src)
                         e.target.style.display = 'none'
                         e.target.parentElement.classList.add('no-image')
                       }}
@@ -171,7 +189,9 @@ export default function History() {
                         src={src}
                         alt={`Prediction ${index + 4}`}
                         className="img-large"
+                        loading="lazy"
                         onError={(e) => {
+                          console.error('Failed to load 7days image:', src)
                           e.target.style.display = 'none'
                           e.target.parentElement.classList.add('no-image-large')
                         }}
@@ -195,7 +215,9 @@ export default function History() {
 
         <div className="section-content">
           {monthImages.length === 0 ? (
-            <p style={{color: '#666', textAlign: 'center', padding: '20px'}}>No images yet</p>
+            <p style={{color: '#666', textAlign: 'center', padding: '20px'}}>
+              No images found. Check console for debug info.
+            </p>
           ) : (
             <>
               <div className="horizontal-scroll">
@@ -209,7 +231,9 @@ export default function History() {
                       src={src}
                       alt={`Result ${index + 1}`}
                       className="img-small"
+                      loading="lazy"
                       onError={(e) => {
+                        console.error('Failed to load month image:', src)
                         e.target.style.display = 'none'
                         e.target.parentElement.classList.add('no-image')
                       }}
@@ -240,7 +264,9 @@ export default function History() {
                         src={src}
                         alt={`Result ${index + 4}`}
                         className="img-large"
+                        loading="lazy"
                         onError={(e) => {
+                          console.error('Failed to load month image:', src)
                           e.target.style.display = 'none'
                           e.target.parentElement.classList.add('no-image-large')
                         }}
