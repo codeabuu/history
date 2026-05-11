@@ -1,5 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
 
+// Auto-import all images from src/assets/ (NOT public/)
+const sevenDaysModules = import.meta.glob('./assets/7days/*.{jpeg,jpg,png,webp}', { eager: true, as: 'url' })
+const monthModules = import.meta.glob('./assets/this-month/*.{jpeg,jpg,png,webp}', { eager: true, as: 'url' })
+
+// Extract URLs - Vite handles the paths automatically
+const sevenDaysImages = Object.values(sevenDaysModules)
+const monthImages = Object.values(monthModules)
+
 export default function History() {
   const [showAll7Days, setShowAll7Days] = useState(false)
   const [showAllMonth, setShowAllMonth] = useState(false)
@@ -7,24 +15,6 @@ export default function History() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [currentArray, setCurrentArray] = useState([])
   const [touchStart, setTouchStart] = useState(null)
-
-  const sevenDaysImages = [
-    '/7days/BTTS.jpeg',
-    '/7days/BTTS&WIN.jpeg',
-    '/7days/BTTS2.jpeg',
-    '/7days/TOD.MEGA.jpeg',
-    '/7days/OVER2.5G2.jpeg',
-    '/7days/day-6.jpeg',
-    '/7days/day-7.jpeg',
-  ]
-
-  const monthImages = [
-    '/this-month/OVER2.5G2.jpeg',
-    '/this-month/TOD.MEGA.jpeg',
-    '/this-month/BTTS.jpeg',
-    '/this-month/result-4.jpg',
-    '/this-month/result-5.jpg',
-  ]
 
   const openLightbox = useCallback((src, array, index) => {
     setCurrentArray(array)
@@ -128,10 +118,10 @@ export default function History() {
         </div>
       )}
 
-      {/* Sticky Header: Past 7 Days */}
+      {/* Past 7 Days */}
       <div className="sticky-section">
         <div className="sticky-header">
-          <span>🔥 Past 7 Days</span>
+          <span>🔥 Past 7 Days ({sevenDaysImages.length})</span>
         </div>
 
         <div className="section-content">
@@ -155,13 +145,15 @@ export default function History() {
             ))}
           </div>
 
-          <button
-            className="see-more-btn"
-            onClick={() => setShowAll7Days(!showAll7Days)}
-          >
-            {showAll7Days ? 'Show Less' : 'See More'}
-            <span className={`arrow ${showAll7Days ? 'up' : ''}`}>▼</span>
-          </button>
+          {sevenDaysImages.length > 3 && (
+            <button
+              className="see-more-btn"
+              onClick={() => setShowAll7Days(!showAll7Days)}
+            >
+              {showAll7Days ? 'Show Less' : 'See More'} ({sevenDaysImages.length - 3} more)
+              <span className={`arrow ${showAll7Days ? 'up' : ''}`}>▼</span>
+            </button>
+          )}
 
           {showAll7Days && (
             <div className="vertical-list">
@@ -189,10 +181,10 @@ export default function History() {
 
       <div className="divider" />
 
-      {/* Sticky Header: This Month */}
+      {/* This Month */}
       <div className="sticky-section">
         <div className="sticky-header">
-          <span>📅 This Month</span>
+          <span>📅 This Month ({monthImages.length})</span>
         </div>
 
         <div className="section-content">
@@ -216,13 +208,15 @@ export default function History() {
             ))}
           </div>
 
-          <button
-            className="see-more-btn"
-            onClick={() => setShowAllMonth(!showAllMonth)}
-          >
-            {showAllMonth ? 'Show Less' : 'See More'}
-            <span className={`arrow ${showAllMonth ? 'up' : ''}`}>▼</span>
-          </button>
+          {monthImages.length > 3 && (
+            <button
+              className="see-more-btn"
+              onClick={() => setShowAllMonth(!showAllMonth)}
+            >
+              {showAllMonth ? 'Show Less' : 'See More'} ({monthImages.length - 3} more)
+              <span className={`arrow ${showAllMonth ? 'up' : ''}`}>▼</span>
+            </button>
+          )}
 
           {showAllMonth && (
             <div className="vertical-list">
