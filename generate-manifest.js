@@ -11,13 +11,13 @@ const manifest = {}
 for (const [key, dir] of Object.entries(folders)) {
   const files = fs.readdirSync(dir)
     .filter(f => /\.(jpg|jpeg|png|webp)$/i.test(f))
-    .map(f => ({
-  file: f,
-  created: (() => {
-    const match = f.match(/\d+\.(\d+)/)
-    return match ? parseInt(match[1]) : 0
-  })()
-}))
+    .map(f => {
+      const stats = fs.statSync(path.join(dir, f))
+      return {
+        file: f,
+        created: stats.birthtimeMs  // Windows creation time
+      }
+    })
     .sort((a, b) => b.created - a.created)  // newest first
     .map(f => f.file)
 
@@ -26,3 +26,4 @@ for (const [key, dir] of Object.entries(folders)) {
 
 fs.writeFileSync('./src/assets/manifest.json', JSON.stringify(manifest, null, 2))
 console.log('✅ Manifest generated')
+console.log('7days order:', manifest['7days'].slice(0, 3))
