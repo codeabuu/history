@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 // Auto-import all images
 const allModules = import.meta.glob('./assets/**/*.{jpeg,jpg,png,webp}', { eager: true })
@@ -6,13 +6,33 @@ const allModules = import.meta.glob('./assets/**/*.{jpeg,jpg,png,webp}', { eager
 // Image cache to prevent reloading
 const imageCache = new Map()
 
-// Preload critical images
 function preloadImage(src) {
   if (!imageCache.has(src)) {
     const img = new Image()
     img.src = src
     imageCache.set(src, img)
   }
+}
+
+function extractDate(filename) {
+  // Matches "WhatsApp Image 2026-06-02 at 18.21.04"
+  const match = filename.match(/(\d{4}-\d{2}-\d{2}) at (\d{2})\.(\d{2})\.(\d{2})/)
+  if (match) {
+    const [, date, hh, mm, ss] = match
+    return new Date(`${date}T${hh}:${mm}:${ss}`).getTime()
+  }
+  return 0 // non-WhatsApp files go to end
+}
+
+function getImagesByFolder(folder) {
+  return Object.entries(allModules)
+    .filter(([path]) => path.includes(`/assets/${folder}/`))
+    .map(([path, mod]) => ({
+      url: mod.default || mod,
+      filename: path.split('/').pop()
+    }))
+    .sort((a, b) => extractDate(b.filename) - extractDate(a.filename))
+    .map(item => item.url)
 }
 
 export default function History() {
@@ -28,72 +48,17 @@ export default function History() {
   const [activeSection, setActiveSection] = useState('7days')
   const [failedImages, setFailedImages] = useState(new Set())
 
-  // Load manifest and images when component mounts
   useEffect(() => {
-    async function loadImages() {
-      try {
-        // Load the manifest dynamically
-        const manifestModule = await import('./assets/manifest.json')
-        const manifest = manifestModule.default
-        
-        // Helper function to get images in manifest order
-        const getOrderedImages = (folder) => {
-          const key = folder === '7days' ? '7days' : 'this-month'
-          const orderedFilenames = manifest[key] || []
-          
-          if (orderedFilenames.length > 0) {
-            // Return images in the exact order from manifest (newest first)
-            return orderedFilenames
-              .map(filename => {
-                const modKey = `./assets/${folder}/${filename}`
-                const mod = allModules[modKey]
-                return mod ? (mod.default || mod) : null
-              })
-              .filter(Boolean)
-          }
-          
-          // Fallback: return unsorted images
-          return Object.entries(allModules)
-            .filter(([path]) => path.includes(`/assets/${folder}/`))
-            .map(([, mod]) => (typeof mod === 'string' ? mod : mod.default))
-            .filter(Boolean)
-        }
-        
-        const sevenDays = getOrderedImages('7days')
-        const month = getOrderedImages('this-month')
-        
-        setSevenDaysImages(sevenDays)
-        setMonthImages(month)
-        
-        // Preload first 5 images for faster display
-        if (sevenDays.length > 0) {
-          sevenDays.slice(0, 5).forEach(preloadImage)
-        }
-        if (month.length > 0) {
-          month.slice(0, 5).forEach(preloadImage)
-        }
-        
-      } catch (error) {
-        console.error('Error loading manifest:', error)
-        // Fallback: load images without manifest
-        const sevenDays = Object.entries(allModules)
-          .filter(([path]) => path.includes('/assets/7days/'))
-          .map(([, mod]) => (typeof mod === 'string' ? mod : mod.default))
-          .filter(Boolean)
-        
-        const month = Object.entries(allModules)
-          .filter(([path]) => path.includes('/assets/this-month/'))
-          .map(([, mod]) => (typeof mod === 'string' ? mod : mod.default))
-          .filter(Boolean)
-        
-        setSevenDaysImages(sevenDays)
-        setMonthImages(month)
-      } finally {
-        setLoading(false)
-      }
-    }
-    
-    loadImages()
+    const sevenDays = getImagesByFolder('7days')
+    const month = getImagesByFolder('this-month')
+
+    setSevenDaysImages(sevenDays)
+    setMonthImages(month)
+
+    sevenDays.slice(0, 5).forEach(preloadImage)
+    month.slice(0, 5).forEach(preloadImage)
+
+    setLoading(false)
   }, [])
 
   const openLightbox = useCallback((src, array, index) => {
@@ -101,8 +66,6 @@ export default function History() {
     setCurrentIndex(index)
     setLightboxImage(src)
     window.history.pushState({ lightbox: true }, '')
-    
-    // Preload adjacent images for smoother navigation
     if (array[index + 1]) preloadImage(array[index + 1])
     if (array[index - 1]) preloadImage(array[index - 1])
   }, [])
@@ -121,8 +84,6 @@ export default function History() {
     const nextIndex = (currentIndex + 1) % currentArray.length
     setCurrentIndex(nextIndex)
     setLightboxImage(currentArray[nextIndex])
-    
-    // Preload next image
     const nextNextIndex = (nextIndex + 1) % currentArray.length
     if (currentArray[nextNextIndex]) preloadImage(currentArray[nextNextIndex])
   }, [currentArray, currentIndex])
@@ -132,8 +93,6 @@ export default function History() {
     const prevIndex = currentIndex === 0 ? currentArray.length - 1 : currentIndex - 1
     setCurrentIndex(prevIndex)
     setLightboxImage(currentArray[prevIndex])
-    
-    // Preload previous image
     const prevPrevIndex = prevIndex === 0 ? currentArray.length - 1 : prevIndex - 1
     if (currentArray[prevPrevIndex]) preloadImage(currentArray[prevPrevIndex])
   }, [currentArray, currentIndex])
@@ -184,8 +143,8 @@ export default function History() {
   if (loading) {
     return (
       <div className="history-container">
-        <div style={{ 
-          textAlign: 'center', 
+        <div style={{
+          textAlign: 'center',
           padding: '50px',
           display: 'flex',
           flexDirection: 'column',
@@ -237,9 +196,9 @@ export default function History() {
             <div className="image-counter">
               {currentIndex + 1} / {currentArray.length}
             </div>
-            <img 
-              src={lightboxImage} 
-              alt={`Full view ${currentIndex + 1}`} 
+            <img
+              src={lightboxImage}
+              alt={`Full view ${currentIndex + 1}`}
               className="lightbox-img"
               loading="eager"
               onError={(e) => {
