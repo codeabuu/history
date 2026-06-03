@@ -12,4 +12,19 @@ export default defineConfig({
       webp: { quality: 70 },
     })
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        assetFileNames: (assetInfo) => {
+          const name = assetInfo.name || ''
+          // Keep images with their original names, no hash
+          if (/\.(jpe?g|png|webp)$/i.test(name)) {
+            return `assets/images/[name][extname]`
+          }
+          // Everything else (css, fonts etc) keeps hash
+          return `assets/[name]-[hash][extname]`
+        }
+      }
+    }
+  }
 })

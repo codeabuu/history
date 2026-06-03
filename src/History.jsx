@@ -38,28 +38,26 @@ export default function History() {
         
         // Helper function to get images in manifest order
         const getOrderedImages = (folder) => {
-  const key = folder === '7days' ? '7days' : 'this-month'
-  const orderedFilenames = manifest[key] || []
-
-  if (orderedFilenames.length > 0) {
-    // Build a map: original filename → built URL
-    const filenameToUrl = {}
-    for (const [fullPath, mod] of Object.entries(allModules)) {
-      // fullPath is like "./assets/7days/WhatsApp Image 2026-06-02 at 18.21.04.jpeg"
-      const originalFilename = fullPath.split('/').pop()
-      filenameToUrl[originalFilename] = mod.default || mod
-    }
-
-    return orderedFilenames
-      .map(filename => filenameToUrl[filename])
-      .filter(Boolean)
-  }
-
-  return Object.entries(allModules)
-    .filter(([path]) => path.includes(`/assets/${folder}/`))
-    .map(([, mod]) => mod.default || mod)
-    .filter(Boolean)
-}
+          const key = folder === '7days' ? '7days' : 'this-month'
+          const orderedFilenames = manifest[key] || []
+          
+          if (orderedFilenames.length > 0) {
+            // Return images in the exact order from manifest (newest first)
+            return orderedFilenames
+              .map(filename => {
+                const modKey = `./assets/${folder}/${filename}`
+                const mod = allModules[modKey]
+                return mod ? (mod.default || mod) : null
+              })
+              .filter(Boolean)
+          }
+          
+          // Fallback: return unsorted images
+          return Object.entries(allModules)
+            .filter(([path]) => path.includes(`/assets/${folder}/`))
+            .map(([, mod]) => (typeof mod === 'string' ? mod : mod.default))
+            .filter(Boolean)
+        }
         
         const sevenDays = getOrderedImages('7days')
         const month = getOrderedImages('this-month')
