@@ -40,6 +40,9 @@ export default function History() {
         const getOrderedImages = (folder) => {
           const key = folder === '7days' ? '7days' : 'this-month'
           const orderedFilenames = manifest[key] || []
+
+          console.log('All module keys:', Object.keys(allModules).slice(0, 5))
+          console.log('Looking for:', `./assets/${folder}/${orderedFilenames[0]}`)
           
           if (orderedFilenames.length > 0) {
             // Return images in the exact order from manifest (newest first)
