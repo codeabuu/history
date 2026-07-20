@@ -272,7 +272,7 @@ export default function History() {
             {/* Grid for remaining images */}
             {currentImages.length > 1 && (
               <div className="image-grid">
-                {currentImages.slice(1, showAll ? currentImages.length : 4)
+                {currentImages.slice(1, showAll ? currentImages.length : 5)
                   .filter(src => !failedImages.has(src))
                   .map((src, index) => (
                     <div
@@ -298,7 +298,7 @@ export default function History() {
             )}
 
             {/* See More */}
-            {currentImages.length > 4 && (
+            {currentImages.length > 5 && (
               <button
                 className="see-more-btn"
                 onClick={() => setShowAll(!showAll)}
@@ -310,7 +310,7 @@ export default function History() {
                   </>
                 ) : (
                   <>
-                    <span>View All ({currentImages.length - 4} more)</span>
+                    <span>View All ({currentImages.length - 5} more)</span>
                     <span className="arrow">▼</span>
                   </>
                 )}
